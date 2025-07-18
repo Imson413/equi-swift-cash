@@ -14,13 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          account_number: string
+          balance: number
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone_number: string | null
+          pin_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          balance?: number
+          created_at?: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          pin_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string
+          balance?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          pin_hash?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          recipient_name: string | null
+          recipient_phone: string | null
+          reference_code: string | null
+          status: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          reference_code?: string | null
+          status?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          reference_code?: string | null
+          status?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_account_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EquiCashHeader } from "@/components/EquiCashHeader";
 import { BalanceCard } from "@/components/BalanceCard";
 import { QuickActions } from "@/components/QuickActions";
@@ -6,50 +6,51 @@ import { RecentTransactions } from "@/components/RecentTransactions";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { SendMoneyDialog } from "@/components/SendMoneyDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { useTransactions } from "@/hooks/useTransactions";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [sendMoneyOpen, setSendMoneyOpen] = useState(false);
   const { toast } = useToast();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const { transactions, loading: transactionsLoading } = useTransactions();
 
-  // Mock data
-  const userData = {
-    name: "John Doe",
-    balance: 15750.00,
-    accountNumber: "0170123456789"
-  };
-
-  const mockTransactions = [
-    {
-      id: "1",
-      type: "received" as const,
-      amount: 2500.00,
-      description: "Money received from Mary Wanjiku",
-      recipient: "Mary Wanjiku",
-      date: "Today, 2:30 PM"
-    },
-    {
-      id: "2", 
-      type: "sent" as const,
-      amount: 500.00,
-      description: "Airtime purchase",
-      date: "Today, 11:15 AM"
-    },
-    {
-      id: "3",
-      type: "bills" as const,
-      amount: 1200.00,
-      description: "KPLC Bill Payment",
-      date: "Yesterday, 4:45 PM"
-    },
-    {
-      id: "4",
-      type: "withdraw" as const,
-      amount: 3000.00,
-      description: "Cash withdrawal - Agent 001",
-      date: "Yesterday, 2:20 PM"
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = "/auth";
     }
-  ];
+  }, [user, authLoading]);
+
+  // Show loading screen while auth is loading
+  if (authLoading || profileLoading || !user || !profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading EquiCash...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Transform transactions for the RecentTransactions component
+  const formattedTransactions = transactions.map(transaction => ({
+    id: transaction.id,
+    type: transaction.transaction_type as 'sent' | 'received' | 'withdraw' | 'deposit' | 'bills' | 'airtime',
+    amount: transaction.amount,
+    description: transaction.description,
+    recipient: transaction.recipient_name,
+    date: new Date(transaction.created_at).toLocaleDateString('en-KE', {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }));
 
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -104,7 +105,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <EquiCashHeader
-        userName={userData.name}
+        userName={profile.full_name}
         onNotificationsClick={() => toast({
           title: "Notifications",
           description: "You have 3 new notifications",
@@ -113,13 +114,13 @@ const Index = () => {
           title: "Menu",
           description: "Opening navigation menu...",
         })}
-        onProfileClick={() => setActiveTab("profile")}
+        onProfileClick={() => signOut()}
       />
       
       <div className="pt-4">
         <BalanceCard 
-          balance={userData.balance}
-          accountNumber={userData.accountNumber}
+          balance={profile.balance}
+          accountNumber={profile.account_number}
         />
         
         <QuickActions
@@ -134,7 +135,7 @@ const Index = () => {
         />
         
         <RecentTransactions
-          transactions={mockTransactions}
+          transactions={formattedTransactions}
           onViewAll={() => setActiveTab("history")}
         />
       </div>
